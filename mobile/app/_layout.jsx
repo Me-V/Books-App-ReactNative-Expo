@@ -3,38 +3,55 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import SafeScreen from "../components/SafeScreen";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
-
 import { useAuthStore } from "../store/authStore";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
-
   const { checkAuth, user, token } = useAuthStore();
+
+  const [authChecked, setAuthChecked] = useState(false);
 
   const [fontsLoaded] = useFonts({
     "JetBrainsMono-Medium": require("../assets/fonts/JetBrainsMono-Medium.ttf"),
   });
 
+  // Run auth check on mount
   useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded]);
-
-  useEffect(() => {
-    checkAuth();
+    (async () => {
+      await checkAuth(); // sets user/token
+      setAuthChecked(true);
+    })();
   }, []);
 
-  // handle navigation based on the auth state
+  // Hide splash only after fonts + auth are ready
   useEffect(() => {
-    const inAuthScreen = segments[0] === "(auth)";
-    const isSignedIn = user && token;
+    if (fontsLoaded && authChecked) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, authChecked]);
 
-    if (!isSignedIn && !inAuthScreen) router.replace("/(auth)");
-    else if (isSignedIn && inAuthScreen) router.replace("/(tabs)");
-  }, [user, token, segments]);
+  // Navigation logic
+  useEffect(() => {
+    if (!fontsLoaded || !authChecked) return; // wait until ready
+
+    const inAuthScreen = segments[0] === "(auth)";
+    const isSignedIn = !!user && !!token;
+
+    if (!isSignedIn && !inAuthScreen) {
+      router.replace("/(auth)");
+    } else if (isSignedIn && inAuthScreen) {
+      router.replace("/(tabs)");
+    }
+  }, [fontsLoaded, authChecked, user, token, segments]);
+
+  // Render nothing until ready (keeps splash visible)
+  if (!fontsLoaded || !authChecked) {
+    return null;
+  }
 
   return (
     <SafeAreaProvider>
