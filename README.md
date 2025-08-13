@@ -47,5 +47,5 @@ eas build --platform ios
 
 ---
 
-If you want, I can **customize this README** with your project name, repo link, and even add screenshots so it looks professional for GitHub or portfolio.  
-Do you want me to make that polished version for you?
+## Download The App From
+https://expo.dev/accounts/thvasu/projects/words-heaven/builds/4b7a48df-dd4b-45ff-ba56-bf8614e26dcd
